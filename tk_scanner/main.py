@@ -80,20 +80,6 @@ async def main_async(config: Config):
         polling_task = asyncio.create_task(tg.start_polling())
         logger.info("🤖 Telegram бот запущен (polling)")
 
-    # Приветственное сообщение
-    if config.telegram_chat_ids and config.telegram_token:
-        await tg.send_to_all(
-            f"🚀 <b>TK PRO v9.9 запущен!</b>\n\n"
-            f"⏱ TF: <b>{tf_name}</b>\n"
-            f"📊 Top-{config.top_n_symbols}\n\n"
-            f"📊 Статистика: tk_dashboard/index.html\n\n"
-            f"<b>Команды:</b>\n"
-            f"/start — помощь\n"
-            f"/ping — проверить связь\n"
-            f"/status — статус бота",
-            'HTML'
-        )
-
     interval = TIMEFRAME_TO_SECONDS.get(config.timeframe, 900)
     state_data = load_state(config.state_file)
 
@@ -139,8 +125,6 @@ async def main_async(config: Config):
 
     except KeyboardInterrupt:
         logger.info("\n🛑 Остановка...")
-        if config.telegram_chat_ids and config.telegram_token:
-            await tg.send_to_all("🛑 <b>TK PRO остановлен</b>", 'HTML')
     finally:
         save_state(state_data, config.state_file)
         if stats:

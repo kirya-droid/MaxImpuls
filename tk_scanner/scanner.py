@@ -104,11 +104,10 @@ async def scan_market_async(
                     low_level = min(df['low'][idx-lookback:idx])
                     break_dist = abs(df['close'][idx] - (high_level if 'long' in sig['type'] else low_level))
                     break_dist_pct = (break_dist / df['close'][idx]) * 100 if df['close'][idx] > 0 else 0
-                    
+
                     # Контекст
-                    from datetime import datetime
                     candle_hour = datetime.fromtimestamp(df['time'][idx] / 1000).hour
-                    
+
                     signal_log.log_signal(
                         symbol=symbol,
                         sig_type=sig['type'],
