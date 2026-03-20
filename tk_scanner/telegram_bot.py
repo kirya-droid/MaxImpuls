@@ -5,8 +5,7 @@
 
 import logging
 from typing import List, Optional
-from datetime import datetime
-from zoneinfo import ZoneInfo
+from datetime import datetime, timedelta, timezone
 from aiogram import Bot, Dispatcher
 from aiogram.filters import Command
 from aiogram.types import Message
@@ -16,8 +15,8 @@ from aiogram.fsm.context import FSMContext
 from .handlers import router as commands_router
 from .handlers.commands import set_admin_chat_ids
 
-# Часовой пояс Москвы
-MSK = ZoneInfo('Europe/Moscow')
+# Часовой пояс Москвы (UTC+3)
+MSK = timezone(timedelta(hours=3))
 
 logger = logging.getLogger(__name__)
 

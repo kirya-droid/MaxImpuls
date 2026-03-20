@@ -4,14 +4,13 @@
 """
 
 import logging
-from datetime import datetime
-from zoneinfo import ZoneInfo
+from datetime import datetime, timedelta, timezone
 from aiogram import Router, F
 from aiogram.types import Message
 from aiogram.filters import Command, CommandStart
 
-# Часовой пояс Москвы
-MSK = ZoneInfo('Europe/Moscow')
+# Часовой пояс Москвы (UTC+3)
+MSK = timezone(timedelta(hours=3))
 
 logger = logging.getLogger(__name__)
 
@@ -91,6 +90,7 @@ async def cmd_help(message: Message) -> None:
         "/start — запустить бота\n"
         "/ping — проверить связь\n"
         "/status — статус бота\n"
+        "/stats — статистика сигналов\n"
         "/help — эта справка\n\n"
         "<b>О боте:</b>\n"
         "Сканирует топ-200 монет Bybit\n"
@@ -101,3 +101,49 @@ async def cmd_help(message: Message) -> None:
         parse_mode='HTML'
     )
     logger.info("📩 /help → %s", message.from_user.id)
+
+
+@router.message(Command("stats"))
+async def cmd_stats(message: Message) -> None:
+    """Обработчик команды /stats"""
+    if not is_admin(message):
+        return
+    
+    from tk_scanner.signal_logger import SignalLogger
+    signal_log = SignalLogger('tk_signals_log.json')
+    stats = signal_log.get_statistics()
+    
+    if stats.get('total', 0) == 0:
+        await message.answer("📊 Нет данных для статистики")
+        return
+    
+    msg = (
+        f"📊 <b>Статистика сигналов</b>\n\n"
+        f"📈 Всего: {stats['total']}\n"
+        f"✅ Завершено: {stats['completed']}\n"
+        f"⏳ Ожидает: {stats['pending']}\n\n"
+    )
+    
+    if stats.get('win_rate'):
+        success_emoji = "✅" if stats['win_rate'] >= 50 else "⚠️"
+        msg += f"{success_emoji} <b>Win Rate:</b> {stats['win_rate']}%\n"
+        msg += f"📊 Успешных: {stats['success']} | Неудач: {stats['fail']}\n\n"
+    
+    if stats.get('avg_profit'):
+        msg += f"💰 Средний профит: +{stats['avg_profit']}%\n"
+        msg += f"📉 Средний убыток: -{stats['avg_loss']}%\n\n"
+    
+    # Топ 3 символа
+    if stats.get('by_symbol'):
+        top_symbols = sorted(
+            stats['by_symbol'].items(),
+            key=lambda x: x[1]['win_rate'],
+            reverse=True
+        )[:3]
+        
+        msg += "🏆 <b>Топ символы:</b>\n"
+        for symbol, data in top_symbols:
+            msg += f"  {symbol}: {data['win_rate']}% ({data['success']}/{data['total']})\n"
+    
+    await message.answer(msg, parse_mode='HTML')
+    logger.info("📩 /stats → %s", message.from_user.id)

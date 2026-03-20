@@ -9,20 +9,20 @@ import logging
 import sys
 import argparse
 import os
-from datetime import datetime, timedelta
-from zoneinfo import ZoneInfo
+from datetime import datetime, timedelta, timezone
 from typing import Optional
 
 from .config import Config, TIMEFRAME_TO_SECONDS, TIMEFRAME_NAMES
 
-# Часовой пояс Москвы
-MSK = ZoneInfo('Europe/Moscow')
+# Часовой пояс Москвы (UTC+3)
+MSK = timezone(timedelta(hours=3))
 from .telegram_bot import TelegramBot
 from .state import load_state, save_state
 from .statistics import StatisticsTracker
 from .scanner import scan_market_async
 from .utils import seconds_to_next_candle
 from .bybit_api import fetch_top_symbols_async
+from .signal_logger import SignalLogger
 
 logger = logging.getLogger(__name__)
 
@@ -66,6 +66,10 @@ async def main_async(config: Config):
     # Инициализация статистики
     stats = StatisticsTracker(config.statistics_file)
 
+    # Инициализация логгера сигналов
+    signal_log = SignalLogger('tk_signals_log.json')
+    logger.info("📊 Логгер сигналов инициализирован")
+
     # Инициализация Telegram бота
     tg = TelegramBot(config.telegram_token, config.telegram_chat_ids)
     await tg.init()
@@ -103,7 +107,7 @@ async def main_async(config: Config):
             logger.info("\n🔄 %s", datetime.now(MSK).strftime('%H:%M:%S'))
 
             # Сканирование
-            state_data, stats_dict = await scan_market_async(state_data, config, tg, stats)
+            state_data, stats_dict = await scan_market_async(state_data, config, tg, stats, signal_log)
             last_scan_time = datetime.now(MSK)
 
             # Отправка отчёта каждые 15 минут
