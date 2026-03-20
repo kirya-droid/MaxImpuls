@@ -5,9 +5,13 @@
 
 import logging
 from datetime import datetime
+from zoneinfo import ZoneInfo
 from aiogram import Router, F
 from aiogram.types import Message
 from aiogram.filters import Command, CommandStart
+
+# Часовой пояс Москвы
+MSK = ZoneInfo('Europe/Moscow')
 
 logger = logging.getLogger(__name__)
 
@@ -66,7 +70,7 @@ async def cmd_status(message: Message) -> None:
     """Обработчик команды /status"""
     if not is_admin(message):
         return
-    now = datetime.now().strftime('%d.%m.%Y %H:%M:%S')
+    now = datetime.now(MSK).strftime('%d.%m.%Y %H:%M:%S')
     await message.answer(
         "🟢 <b>TK PRO Бот активен</b>\n\n"
         "✅ Все системы в норме\n"

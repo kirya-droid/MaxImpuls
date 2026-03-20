@@ -6,6 +6,7 @@
 import logging
 from typing import List, Optional
 from datetime import datetime
+from zoneinfo import ZoneInfo
 from aiogram import Bot, Dispatcher
 from aiogram.filters import Command
 from aiogram.types import Message
@@ -14,6 +15,9 @@ from aiogram.fsm.context import FSMContext
 
 from .handlers import router as commands_router
 from .handlers.commands import set_admin_chat_ids
+
+# Часовой пояс Москвы
+MSK = ZoneInfo('Europe/Moscow')
 
 logger = logging.getLogger(__name__)
 
@@ -90,7 +94,7 @@ class TelegramBot:
         last_scan_time: datetime
     ) -> int:
         """Отправить отчёт за 15 минут"""
-        now = datetime.now()
+        now = datetime.now(MSK)
         time_since_scan = (now - last_scan_time).total_seconds()
         status = "🟢 Бот активен" if time_since_scan < 120 else "🟡 Задержка скана"
 
