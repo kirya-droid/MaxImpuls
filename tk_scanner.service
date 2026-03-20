@@ -1,0 +1,17 @@
+[Unit]
+Description=TK PRO Scanner Telegram Bot
+After=network.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/home/ImpulsBot
+Environment="PATH=/usr/bin:/usr/local/bin"
+ExecStart=/usr/bin/python3 /home/ImpulsBot/main.py
+Restart=always
+RestartSec=10
+StandardOutput=append:/home/ImpulsBot/tk_pro.log
+StandardError=append:/home/ImpulsBot/tk_pro_error.log
+
+[Install]
+WantedBy=multi-user.target

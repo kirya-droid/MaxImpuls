@@ -1,0 +1,70 @@
+name: 🚀 Deploy to Server
+
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch:  # Ручной запуск
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: 📥 Checkout кода
+      uses: actions/checkout@v4
+
+    - name: 🔑 Настройка SSH ключа
+      uses: webfactory/ssh-agent@v0.9.0
+      with:
+        ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+    - name: ⚙️ Отключение проверки хоста
+      run: |
+        mkdir -p ~/.ssh
+        echo "Host *" > ~/.ssh/config
+        echo "  StrictHostKeyChecking no" >> ~/.ssh/config
+        echo "  UserKnownHostsFile /dev/null" >> ~/.ssh/config
+        chmod 600 ~/.ssh/config
+
+    - name: 📤 Копирование файлов на сервер
+      run: |
+        echo "🚀 Начинаем деплой на сервер..."
+        
+        # Копируем файлы проекта
+        scp -r \
+          tk_scanner/ \
+          tk_dashboard/ \
+          main.py \
+          requirements.txt \
+          .env \
+          root@${{ secrets.SERVER_HOST }}:/home/${{ secrets.SERVER_USER }}/
+        
+        # Копируем systemd сервис (если есть изменения)
+        if [ -f tk_scanner.service ]; then
+          scp tk_scanner.service root@${{ secrets.SERVER_HOST }}:/etc/systemd/system/
+          echo "✅ systemd сервис обновлён"
+        fi
+        
+        echo "✅ Файлы скопированы"
+
+    - name: 🔄 Перезапуск сервиса
+      run: |
+        echo "🔄 Перезапускаем сервис..."
+        
+        ssh root@${{ secrets.SERVER_HOST }} << 'ENDSSH'
+          cd /home/${{ secrets.SERVER_USER }}
+          
+          # Устанавливаем зависимости (если изменились)
+          pip3 install -r requirements.txt --quiet
+          
+          # Перезагружаем systemd (если сервис обновился)
+          systemctl daemon-reload || true
+          
+          # Перезапускаем сервис
+          systemctl restart tk_scanner
+          
+          # Проверяем статус
+          systemctl status tk_scanner --no-pager || true
+        ENDSSH
+        
+        echo "✅ Деплой завершён!"

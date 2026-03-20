@@ -1,0 +1,14 @@
+# TK PRO Scanner — зависимости
+# ================================
+
+# Telegram бот
+aiogram>=3.26.0
+
+# HTTP клиент
+aiohttp>=3.9.0
+
+# Переменные окружения
+python-dotenv>=1.0.0
+
+# Утилиты
+typing-extensions>=4.7.0

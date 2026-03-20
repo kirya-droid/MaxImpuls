@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎯 TK Bar Detector — Статистика</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: #eee;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container { max-width: 1400px; margin: 0 auto; }
+        h1 {
+            text-align: center;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            background: linear-gradient(90deg, #00d2ff, #3a7bd5);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .updated { text-align: center; color: #888; margin-bottom: 30px; }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        .card {
+            background: rgba(255,255,255,0.05);
+            border-radius: 15px;
+            padding: 20px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        .card h2 {
+            font-size: 1.3em;
+            margin-bottom: 15px;
+            color: #00d2ff;
+            border-bottom: 2px solid #00d2ff;
+            padding-bottom: 10px;
+        }
+        .stat-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+        .stat-row:last-child { border-bottom: none; }
+        .stat-label { color: #aaa; }
+        .stat-value { font-weight: bold; font-size: 1.1em; }
+        .success { color: #00ff88; }
+        .fail { color: #ff4757; }
+        .pending { color: #ffa502; }
+        .percent-high { color: #00ff88; font-weight: bold; }
+        .percent-low { color: #ff4757; font-weight: bold; }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        th {
+            background: rgba(0,210,255,0.2);
+            color: #00d2ff;
+            font-weight: 600;
+        }
+        tr:hover { background: rgba(255,255,255,0.05); }
+        .badge {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 0.85em;
+            font-weight: bold;
+        }
+        .badge-1 { background: #3a7bd5; }
+        .badge-2 { background: #9b59b6; }
+        .badge-3 { background: #e74c3c; }
+        .badge-long { background: #00d2ff; color: #000; }
+        .badge-short { background: #ff9f43; color: #000; }
+        .loading {
+            text-align: center;
+            padding: 50px;
+            font-size: 1.5em;
+            color: #888;
+        }
+        .refresh-btn {
+            display: block;
+            margin: 20px auto;
+            padding: 12px 30px;
+            background: linear-gradient(90deg, #00d2ff, #3a7bd5);
+            border: none;
+            border-radius: 25px;
+            color: white;
+            font-size: 1em;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        .refresh-btn:hover { transform: scale(1.05); }
+        .insight {
+            background: rgba(0,255,136,0.1);
+            border-left: 4px solid #00ff88;
+            padding: 15px;
+            margin-top: 20px;
+            border-radius: 0 10px 10px 0;
+        }
+        .insight h3 { color: #00ff88; margin-bottom: 10px; }
+        .insight ul { margin-left: 20px; }
+        .insight li { margin: 5px 0; color: #ccc; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎯 TK Bar Detector PRO</h1>
+        <p class="updated">Обновлено: <span id="updated">Загрузка...</span></p>
+        
+        <button class="refresh-btn" onclick="loadData()">🔄 Обновить</button>
+        
+        <div id="loading" class="loading">📊 Загрузка данных...</div>
+        
+        <div id="content" style="display: none;">
+            <!-- Основная статистика -->
+            <div class="grid">
+                <div class="card">
+                    <h2>📊 Сегодня</h2>
+                    <div class="stat-row">
+                        <span class="stat-label">TK-пробоев:</span>
+                        <span class="stat-value" id="tk-proboy">-</span>
+                    </div>
+                    <div class="stat-row">
+                        <span class="stat-label">TK-ретестов:</span>
+                        <span class="stat-value" id="retests-total">-</span>
+                    </div>
+                    <div class="stat-row">
+                        <span class="stat-label">#1:</span>
+                        <span class="stat-value" id="retest-1">-</span>
+                    </div>
+                    <div class="stat-row">
+                        <span class="stat-label">#2:</span>
+                        <span class="stat-value" id="retest-2">-</span>
+                    </div>
+                    <div class="stat-row">
+                        <span class="stat-label">#3:</span>
+                        <span class="stat-value" id="retest-3">-</span>
+                    </div>
+                    <div class="stat-row">
+                        <span class="stat-label">✅ Успешных:</span>
+                        <span class="stat-value success" id="success">-</span>
+                    </div>
+                    <div class="stat-row">
+                        <span class="stat-label">❌ Неудач:</span>
+                        <span class="stat-value fail" id="fail">-</span>
+                    </div>
+                    <div class="stat-row">
+                        <span class="stat-label">⏳ Ждут:</span>
+                        <span class="stat-value pending" id="pending">-</span>
+                    </div>
+                    <div class="stat-row" style="border-top: 2px solid #00d2ff; margin-top: 10px; padding-top: 10px;">
+                        <span class="stat-label">🎯 Успех:</span>
+                        <span class="stat-value percent-high" id="success-rate">-</span>
+                    </div>
+                </div>
+                
+                <!-- По ретестам -->
+                <div class="card">
+                    <h2>🎯 По ретестам</h2>
+                    <div id="by-retest"></div>
+                </div>
+                
+                <!-- По метрикам -->
+                <div class="card">
+                    <h2>🔥 По метрикам</h2>
+                    <div class="stat-row">
+                        <span class="stat-label">volume_ratio ≥ 2.0:</span>
+                        <span class="stat-value" id="vol-high">-</span>
+                    </div>
+                    <div class="stat-row">
+                        <span class="stat-label">volume_ratio < 2.0:</span>
+                        <span class="stat-value" id="vol-low">-</span>
+                    </div>
+                    <div class="stat-row">
+                        <span class="stat-label">body_ratio ≥ 1.5:</span>
+                        <span class="stat-value" id="body-high">-</span>
+                    </div>
+                    <div class="stat-row">
+                        <span class="stat-label">body_ratio < 1.5:</span>
+                        <span class="stat-value" id="body-low">-</span>
+                    </div>
+                </div>
+                
+                <!-- По направлению -->
+                <div class="card">
+                    <h2>🧭 По направлению</h2>
+                    <div class="stat-row">
+                        <span class="stat-label">🔵 LONG:</span>
+                        <span class="stat-value" id="long-stats">-</span>
+                    </div>
+                    <div class="stat-row">
+                        <span class="stat-label">🟠 SHORT:</span>
+                        <span class="stat-value" id="short-stats">-</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Топ монет -->
+            <div class="card" style="margin-bottom: 30px;">
+                <h2>🏆 Топ монет</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Монета</th>
+                            <th>Всего</th>
+                            <th>✅</th>
+                            <th>❌</th>
+                            <th>%</th>
+                        </tr>
+                    </thead>
+                    <tbody id="top-symbols"></tbody>
+                </table>
+            </div>
+            
+            <!-- Последние сигналы -->
+            <div class="card">
+                <h2>📋 Последние сигналы</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Время</th>
+                            <th>Символ</th>
+                            <th>Тип</th>
+                            <th>#</th>
+                            <th>Вход</th>
+                            <th>Выход</th>
+                            <th>%</th>
+                            <th>Результат</th>
+                        </tr>
+                    </thead>
+                    <tbody id="recent-signals"></tbody>
+                </table>
+            </div>
+            
+            <!-- Инсайты -->
+            <div class="insight" id="insights">
+                <h3>💡 Рекомендации</h3>
+                <ul id="insights-list"></ul>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        async function loadData() {
+            try {
+                const response = await fetch('stats.json?t=' + Date.now());
+                const data = await response.json();
+                
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('content').style.display = 'block';
+                
+                // Обновляем дату
+                document.getElementById('updated').textContent = data.updated;
+                
+                // Основная статистика
+                const s = data.summary;
+                document.getElementById('tk-proboy').textContent = s.tk_proboy;
+                document.getElementById('retests-total').textContent = s.retests_total;
+                document.getElementById('retest-1').textContent = s.retest_1;
+                document.getElementById('retest-2').textContent = s.retest_2;
+                document.getElementById('retest-3').textContent = s.retest_3;
+                document.getElementById('success').textContent = s.success;
+                document.getElementById('fail').textContent = s.fail;
+                document.getElementById('pending').textContent = s.pending;
+                document.getElementById('success-rate').textContent = s.success_rate + '%';
+                
+                // По ретестам
+                const retestHtml = Object.entries(data.by_retest_num).map(([num, stats]) => `
+                    <div class="stat-row">
+                        <span class="stat-label">#${num}:</span>
+                        <span class="stat-value">
+                            ${stats.total} → 
+                            <span class="success">${stats.success}</span> / 
+                            <span class="fail">${stats.fail}</span>
+                            <span class="${stats.percent >= 60 ? 'percent-high' : stats.percent < 40 ? 'percent-low' : ''}">
+                                (${stats.percent}%)
+                            </span>
+                        </span>
+                    </div>
+                `).join('');
+                document.getElementById('by-retest').innerHTML = retestHtml;
+                
+                // По метрикам
+                const m = data.by_metric;
+                document.getElementById('vol-high').innerHTML = `${m.volume_high.total} → <span class="success">${m.volume_high.success}</span> / <span class="fail">${m.volume_high.fail}</span> <span class="${m.volume_high.percent >= 60 ? 'percent-high' : 'percent-low'}">(${m.volume_high.percent}%)</span>`;
+                document.getElementById('vol-low').innerHTML = `${m.volume_low.total} → <span class="success">${m.volume_low.success}</span> / <span class="fail">${m.volume_low.fail}</span> <span class="${m.volume_low.percent >= 60 ? 'percent-high' : 'percent-low'}">(${m.volume_low.percent}%)</span>`;
+                document.getElementById('body-high').innerHTML = `${m.body_high.total} → <span class="success">${m.body_high.success}</span> / <span class="fail">${m.body_high.fail}</span> <span class="${m.body_high.percent >= 60 ? 'percent-high' : 'percent-low'}">(${m.body_high.percent}%)</span>`;
+                document.getElementById('body-low').innerHTML = `${m.body_low.total} → <span class="success">${m.body_low.success}</span> / <span class="fail">${m.body_low.fail}</span> <span class="${m.body_low.percent >= 60 ? 'percent-high' : 'percent-low'}">(${m.body_low.percent}%)</span>`;
+                
+                // По направлению
+                const dir = data.by_direction;
+                document.getElementById('long-stats').innerHTML = `${dir.LONG.total} → <span class="success">${dir.LONG.success}</span> / <span class="fail">${dir.LONG.fail}</span>`;
+                document.getElementById('short-stats').innerHTML = `${dir.SHORT.total} → <span class="success">${dir.SHORT.success}</span> / <span class="fail">${dir.SHORT.fail}</span>`;
+                
+                // Топ монет
+                const symbolsHtml = data.top_symbols.map(sym => `
+                    <tr>
+                        <td><b>${sym.symbol}</b></td>
+                        <td>${sym.total}</td>
+                        <td class="success">${sym.success}</td>
+                        <td class="fail">${sym.fail}</td>
+                        <td class="${sym.percent >= 60 ? 'percent-high' : 'percent-low'}">${sym.percent}%</td>
+                    </tr>
+                `).join('');
+                document.getElementById('top-symbols').innerHTML = symbolsHtml;
+                
+                // Последние сигналы
+                const signalsHtml = data.recent_signals.reverse().map(sig => `
+                    <tr>
+                        <td>${sig.time.split(' ')[1] || sig.time}</td>
+                        <td><b>${sig.symbol}</b></td>
+                        <td><span class="badge badge-${sig.direction.toLowerCase()}">${sig.direction}</span></td>
+                        <td><span class="badge badge-${sig.retest_num}">#${sig.retest_num}</span></td>
+                        <td>${sig.entry_price}</td>
+                        <td>${sig.exit_price || '-'}</td>
+                        <td class="${sig.move_percent > 0 ? 'success' : sig.move_percent < 0 ? 'fail' : ''}">${sig.move_percent > 0 ? '+' : ''}${sig.move_percent}%</td>
+                        <td>
+                            ${sig.result === 'success' ? '<span class="success">✅</span>' : 
+                              sig.result === 'fail' ? '<span class="fail">❌</span>' : 
+                              '<span class="pending">⏳</span>'}
+                        </td>
+                    </tr>
+                `).join('');
+                document.getElementById('recent-signals').innerHTML = signalsHtml;
+                
+                // Инсайты
+                const insights = [];
+                if (data.by_retest_num['2']?.percent > 60) {
+                    insights.push('Ретесты #2 показывают высокую успешность — стоит ждать второй вход!');
+                }
+                if (data.by_metric?.volume_high?.percent > 70) {
+                    insights.push('Сигналы с volume_ratio ≥ 2.0 имеют высокий % успеха — фильтруй по объёму!');
+                }
+                if (data.by_metric?.body_high?.percent > 70) {
+                    insights.push('Сигналы с body_ratio ≥ 1.5 успешнее — обращай внимание на размер тела!');
+                }
+                if (data.top_symbols.length > 0 && data.top_symbols[0].percent > 70) {
+                    insights.push(`Монета ${data.top_symbols[0].symbol} показывает лучшую статистику — ${data.top_symbols[0].percent}% успеха!`);
+                }
+                
+                if (insights.length === 0) {
+                    insights.push('Накоплено недостаточно данных для рекомендаций. Продолжай сбор статистики!');
+                }
+                
+                document.getElementById('insights-list').innerHTML = insights.map(i => `<li>${i}</li>`).join('');
+                
+            } catch (error) {
+                console.error('Ошибка загрузки:', error);
+                document.getElementById('loading').innerHTML = '❌ Ошибка загрузки данных. Убедитесь что бот запущен.';
+            }
+        }
+        
+        // Загружаем при старте
+        loadData();
+        
+        // Автообновление каждые 30 секунд
+        setInterval(loadData, 30000);
+    </script>
+</body>
+</html>
