@@ -121,16 +121,17 @@ class TelegramBot:
         to = signal.get('test_open', 0)
         tc = signal.get('test_close', 0)
 
-        # Время свечей
+        # Время свечей (московское = сервер + 1 час)
         tkto = signal.get('tk_time_open', 0)
         tktc = signal.get('tk_time_close', 0)
         tto = signal.get('test_time_open', 0)
         ttc = signal.get('test_time_close', 0)
 
-        tkod = datetime.fromtimestamp(tkto / 1000).strftime('%d.%m %H:%M') if tkto else "N/A"
-        tkcd = datetime.fromtimestamp(tktc / 1000).strftime('%d.%m %H:%M') if tktc else "N/A"
-        tod = datetime.fromtimestamp(tto / 1000).strftime('%d.%m %H:%M') if tto else "N/A"
-        tcd = datetime.fromtimestamp(ttc / 1000).strftime('%d.%m %H:%M') if ttc else "N/A"
+        # Добавляем +1 час к времени сервера для Москвы
+        tkod = datetime.fromtimestamp(tkto / 1000 + 3600).strftime('%d.%m %H:%M') if tkto else "N/A"
+        tkcd = datetime.fromtimestamp(tktc / 1000 + 3600).strftime('%d.%m %H:%M') if tktc else "N/A"
+        tod = datetime.fromtimestamp(tto / 1000 + 3600).strftime('%d.%m %H:%M') if tto else "N/A"
+        tcd = datetime.fromtimestamp(ttc / 1000 + 3600).strftime('%d.%m %H:%M') if ttc else "N/A"
 
         retest_label = f"#{retest_num}" if retest_num > 1 else ""
 
