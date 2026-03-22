@@ -121,8 +121,16 @@ class TelegramBot:
         to = signal.get('test_open', 0)
         tc = signal.get('test_close', 0)
 
-        # Текущее московское время
-        now_msk = datetime.now().strftime('%d.%m %H:%M')
+        # Время свечей
+        tkto = signal.get('tk_time_open', 0)
+        tktc = signal.get('tk_time_close', 0)
+        tto = signal.get('test_time_open', 0)
+        ttc = signal.get('test_time_close', 0)
+
+        tkod = datetime.fromtimestamp(tkto / 1000).strftime('%d.%m %H:%M') if tkto else "N/A"
+        tkcd = datetime.fromtimestamp(tktc / 1000).strftime('%d.%m %H:%M') if tktc else "N/A"
+        tod = datetime.fromtimestamp(tto / 1000).strftime('%d.%m %H:%M') if tto else "N/A"
+        tcd = datetime.fromtimestamp(ttc / 1000).strftime('%d.%m %H:%M') if ttc else "N/A"
 
         retest_label = f"#{retest_num}" if retest_num > 1 else ""
 
@@ -135,13 +143,12 @@ class TelegramBot:
 
         msg = (
             f"{header}\n\n"
-            f"🕒 <b>Время сигнала:</b> {now_msk}\n\n"
             f"🪙 <b>{sym}</b>\n"
             f"🧭 {direction}\n\n"
             f"📊 <b>ТК-свеча:</b>\n"
-            f"O: {tko:.4f} | C: {tkc:.4f}\n\n"
+            f"O: {tkod} {tko:.4f} | C: {tkcd} {tkc:.4f}\n\n"
             f"📊 <b>Тестовая свеча:</b>\n"
-            f"O: {to:.4f} | C: {tc:.4f}\n\n"
+            f"O: {tod} {to:.4f} | C: {tcd} {tc:.4f}\n\n"
             f"{footer}"
         )
 
