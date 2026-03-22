@@ -7,11 +7,12 @@
 import json
 import os
 import logging
-from datetime import datetime, timedelta, timezone
-from typing import Dict, List, Any, Optional
+from datetime import datetime, timedelta
 
-# Часовой пояс Москвы (UTC+3)
-MSK = timezone(timedelta(hours=3))
+# Московское время (UTC+3) - жёсткое смещение
+def get_msk_time() -> datetime:
+    """Вернуть текущее время Москвы"""
+    return datetime.utcnow() + timedelta(hours=3)
 logger = logging.getLogger(__name__)
 
 
@@ -25,14 +26,14 @@ class SignalLogger:
     def _load(self) -> Dict[str, Any]:
         """Загрузить существующие данные"""
         if not os.path.exists(self.log_file):
-            return {'signals': [], 'metadata': {'created': datetime.now(MSK).isoformat()}}
+            return {'signals': [], 'metadata': {'created': get_msk_time().isoformat()}}
         
         try:
             with open(self.log_file, 'r', encoding='utf-8') as f:
                 return json.load(f)
         except Exception as e:
             logger.error("❌ Ошибка загрузки логов: %s", e)
-            return {'signals': [], 'metadata': {'created': datetime.now(MSK).isoformat()}}
+            return {'signals': [], 'metadata': {'created': get_msk_time().isoformat()}}
 
     def _save(self) -> None:
         """Сохранить данные"""
@@ -59,11 +60,11 @@ class SignalLogger:
         Returns:
             signal_id: уникальный ID сигнала
         """
-        signal_id = f"{symbol}_{sig_type}_{datetime.now(MSK).strftime('%Y%m%d_%H%M')}"
+        signal_id = f"{symbol}_{sig_type}_{get_msk_time().strftime('%Y%m%d_%H%M')}"
         
         signal = {
             'signal_id': signal_id,
-            'timestamp': datetime.now(MSK).isoformat(),
+            'timestamp': get_msk_time().isoformat(),
             'symbol': symbol,
             'type': sig_type,
             'confirmation': confirmation,

@@ -13,6 +13,11 @@ from datetime import datetime, timedelta
 from typing import Optional
 
 from .config import Config, TIMEFRAME_TO_SECONDS, TIMEFRAME_NAMES
+
+# Московское время (UTC+3) - жёсткое смещение
+def get_msk_time() -> datetime:
+    """Вернуть текущее время Москвы"""
+    return datetime.utcnow() + timedelta(hours=3)
 from .telegram_bot import TelegramBot
 from .state import load_state, save_state
 from .statistics import StatisticsTracker
@@ -81,20 +86,20 @@ async def main_async(config: Config):
     state_data = load_state(config.state_file)
 
     scan_count = 0
-    last_report_time = datetime.now()
+    last_report_time = get_msk_time()
     report_interval = 15 * 60  # 15 минут в секундах
-    last_scan_time = datetime.now()
+    last_scan_time = get_msk_time()
 
     try:
         while True:
-            logger.info("\n🔄 %s", datetime.now().strftime('%H:%M:%S'))
+            logger.info("\n🔄 %s", get_msk_time().strftime('%H:%M:%S'))
 
             # Сканирование
             state_data, stats_dict = await scan_market_async(state_data, config, tg, stats, signal_log)
-            last_scan_time = datetime.now()
+            last_scan_time = get_msk_time()
 
             # Отправка отчёта каждые 15 минут
-            now = datetime.now()
+            now = get_msk_time()
             if (now - last_report_time).total_seconds() >= report_interval:
                 last_report_time = now
 
@@ -116,7 +121,7 @@ async def main_async(config: Config):
                     logger.warning("⚠️ Не удалось получить цены для обновления")
 
             wait = seconds_to_next_candle(interval)
-            logger.info("⏳ До скана: %d сек (%s)", wait, (datetime.now() + timedelta(seconds=wait)).strftime('%H:%M:%S'))
+            logger.info("⏳ До скана: %d сек (%s)", wait, (get_msk_time() + timedelta(seconds=wait)).strftime('%H:%M:%S'))
 
             await asyncio.sleep(wait)
 
@@ -152,7 +157,7 @@ def setup_logging(log_file: str, debug: bool = False):
             logging.StreamHandler()
         ]
     )
-    logging.Formatter.converter = lambda *args: datetime.now().timetuple()
+    logging.Formatter.converter = lambda *args: get_msk_time().timetuple()
 
 
 def parse_args():

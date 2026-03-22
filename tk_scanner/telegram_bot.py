@@ -6,6 +6,11 @@
 import logging
 from typing import List, Optional
 from datetime import datetime, timedelta
+
+# Московское время (UTC+3) - жёсткое смещение
+def get_msk_time() -> datetime:
+    """Вернуть текущее время Москвы"""
+    return datetime.utcnow() + timedelta(hours=3)
 from aiogram import Bot, Dispatcher
 from aiogram.filters import Command
 from aiogram.types import Message
@@ -93,7 +98,7 @@ class TelegramBot:
         # Добавляем +2 часа к времени сервера
         msk_time = last_scan_time + timedelta(hours=2)
         
-        now = datetime.now() + timedelta(hours=2)
+        now = get_msk_time() + timedelta(hours=2)
         time_since_scan = (now - msk_time).total_seconds()
         status = "🟢 Бот активен" if time_since_scan < 120 else "🟡 Задержка скана"
 

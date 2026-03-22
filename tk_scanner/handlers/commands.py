@@ -5,6 +5,11 @@
 
 import logging
 from datetime import datetime, timedelta
+
+# Московское время (UTC+3) - жёсткое смещение
+def get_msk_time() -> datetime:
+    """Вернуть текущее время Москвы"""
+    return datetime.utcnow() + timedelta(hours=3)
 from aiogram import Router, F
 from aiogram.types import Message
 from aiogram.filters import Command, CommandStart
@@ -67,7 +72,7 @@ async def cmd_status(message: Message) -> None:
     if not is_admin(message):
         return
     # Добавляем +2 часа к времени сервера
-    now = datetime.now() + timedelta(hours=2)
+    now = get_msk_time() + timedelta(hours=2)
     now_str = now.strftime('%d.%m.%Y %H:%M:%S')
     await message.answer(
         "🟢 <b>TK PRO Бот активен</b>\n\n"
