@@ -8,6 +8,7 @@ import json
 import os
 import logging
 from datetime import datetime, timedelta
+from typing import Dict, List, Any, Optional
 
 # Московское время (UTC+3) - жёсткое смещение
 def get_msk_time() -> datetime:
