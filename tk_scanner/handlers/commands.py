@@ -4,13 +4,10 @@
 """
 
 import logging
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta
 from aiogram import Router, F
 from aiogram.types import Message
 from aiogram.filters import Command, CommandStart
-
-# Часовой пояс Москвы (UTC+3)
-MSK = timezone(timedelta(hours=3))
 
 logger = logging.getLogger(__name__)
 
@@ -69,11 +66,13 @@ async def cmd_status(message: Message) -> None:
     """Обработчик команды /status"""
     if not is_admin(message):
         return
-    now = datetime.now(MSK).strftime('%d.%m.%Y %H:%M:%S')
+    # Добавляем +2 часа к времени сервера
+    now = datetime.now() + timedelta(hours=2)
+    now_str = now.strftime('%d.%m.%Y %H:%M:%S')
     await message.answer(
         "🟢 <b>TK PRO Бот активен</b>\n\n"
         "✅ Все системы в норме\n"
-        f"🕒 Время: <code>{now}</code>",
+        f"🕒 Время: <code>{now_str}</code>",
         parse_mode='HTML'
     )
     logger.info("📩 /status → %s", message.from_user.id)

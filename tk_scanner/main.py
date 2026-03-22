@@ -9,13 +9,10 @@ import logging
 import sys
 import argparse
 import os
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta
 from typing import Optional
 
 from .config import Config, TIMEFRAME_TO_SECONDS, TIMEFRAME_NAMES
-
-# Часовой пояс Москвы (UTC+3)
-MSK = timezone(timedelta(hours=3))
 from .telegram_bot import TelegramBot
 from .state import load_state, save_state
 from .statistics import StatisticsTracker
@@ -84,20 +81,20 @@ async def main_async(config: Config):
     state_data = load_state(config.state_file)
 
     scan_count = 0
-    last_report_time = datetime.now(MSK)
+    last_report_time = datetime.now()
     report_interval = 15 * 60  # 15 минут в секундах
-    last_scan_time = datetime.now(MSK)
+    last_scan_time = datetime.now()
 
     try:
         while True:
-            logger.info("\n🔄 %s", datetime.now(MSK).strftime('%H:%M:%S'))
+            logger.info("\n🔄 %s", datetime.now().strftime('%H:%M:%S'))
 
             # Сканирование
             state_data, stats_dict = await scan_market_async(state_data, config, tg, stats, signal_log)
-            last_scan_time = datetime.now(MSK)
+            last_scan_time = datetime.now()
 
             # Отправка отчёта каждые 15 минут
-            now = datetime.now(MSK)
+            now = datetime.now()
             if (now - last_report_time).total_seconds() >= report_interval:
                 last_report_time = now
 
@@ -119,7 +116,7 @@ async def main_async(config: Config):
                     logger.warning("⚠️ Не удалось получить цены для обновления")
 
             wait = seconds_to_next_candle(interval)
-            logger.info("⏳ До скана: %d сек (%s)", wait, (datetime.now(MSK) + timedelta(seconds=wait)).strftime('%H:%M:%S'))
+            logger.info("⏳ До скана: %d сек (%s)", wait, (datetime.now() + timedelta(seconds=wait)).strftime('%H:%M:%S'))
 
             await asyncio.sleep(wait)
 

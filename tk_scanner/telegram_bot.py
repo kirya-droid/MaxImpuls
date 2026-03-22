@@ -5,7 +5,7 @@
 
 import logging
 from typing import List, Optional
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta
 from aiogram import Bot, Dispatcher
 from aiogram.filters import Command
 from aiogram.types import Message
@@ -14,9 +14,6 @@ from aiogram.fsm.context import FSMContext
 
 from .handlers import router as commands_router
 from .handlers.commands import set_admin_chat_ids
-
-# Часовой пояс Москвы (UTC+3)
-MSK = timezone(timedelta(hours=3))
 
 logger = logging.getLogger(__name__)
 
@@ -93,8 +90,11 @@ class TelegramBot:
         last_scan_time: datetime
     ) -> int:
         """Отправить отчёт за 15 минут"""
-        now = datetime.now(MSK)
-        time_since_scan = (now - last_scan_time).total_seconds()
+        # Добавляем +2 часа к времени сервера
+        msk_time = last_scan_time + timedelta(hours=2)
+        
+        now = datetime.now() + timedelta(hours=2)
+        time_since_scan = (now - msk_time).total_seconds()
         status = "🟢 Бот активен" if time_since_scan < 120 else "🟡 Задержка скана"
 
         msg = (
@@ -104,7 +104,7 @@ class TelegramBot:
             f"🔍 TK-PROBOY: <b>{tk_count}</b>\n"
             f"🎯 TK-RETEST: <b>{retest_count}</b>\n"
             f"📈 Всего: <b>{total_count}</b>\n\n"
-            f"🕒 Последнее сканирование: {last_scan_time.strftime('%H:%M:%S')}"
+            f"🕒 Последнее сканирование: {msk_time.strftime('%H:%M:%S')}"
         )
 
         return await self.send_to_all(msg)
