@@ -5,7 +5,7 @@
 
 import logging
 from typing import List, Optional
-from datetime import datetime
+from datetime import datetime, timedelta
 from aiogram import Bot, Dispatcher
 from aiogram.filters import Command
 from aiogram.types import Message

@@ -159,14 +159,6 @@ def calculate_tk_pro_signals(
         bar_idx = level.get('bar_idx')
 
         if tk_open and tk_dir != 0 and retest_count < max_retests and idx > 0:
-            # Проверка: сколько свечей прошло с момента ТК-бара
-            bars_since_tk = idx - bar_idx
-            
-            # Фильтр: ретест не раньше 2 свечей (30 минут на 15м TF)
-            # Отсекаем первую свечу (15 минут) — слишком рано
-            if bars_since_tk < 2:
-                continue  # Пропустить этот уровень, ждём ещё
-
             # Касание: цена тестовой свечи пересекает уровень открытия ТК-бара
             touch = df['low'][idx] <= tk_open <= df['high'][idx]
 
