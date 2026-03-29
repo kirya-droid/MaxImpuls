@@ -90,10 +90,10 @@ class TelegramBot:
         last_scan_time: datetime
     ) -> int:
         """Отправить отчёт за 15 минут"""
-        # Добавляем +2 часа к времени сервера
-        msk_time = last_scan_time + timedelta(hours=2)
-        
-        now = datetime.now() + timedelta(hours=2)
+        # Добавляем +1 час к времени сервера (летом UTC+2 → Москва UTC+3)
+        msk_time = last_scan_time + timedelta(hours=1)
+
+        now = datetime.now() + timedelta(hours=1)
         time_since_scan = (now - msk_time).total_seconds()
         status = "🟢 Бот активен" if time_since_scan < 120 else "🟡 Задержка скана"
 
@@ -121,17 +121,17 @@ class TelegramBot:
         to = signal.get('test_open', 0)
         tc = signal.get('test_close', 0)
 
-        # Время свечей (московское = сервер + 2 часа)
+        # Время свечей (московское = сервер + 1 час, т.к. сервер UTC+2 летом)
         tkto = signal.get('tk_time_open', 0)
         tktc = signal.get('tk_time_close', 0)
         tto = signal.get('test_time_open', 0)
         ttc = signal.get('test_time_close', 0)
 
-        # Добавляем +2 часа к времени сервера для Москвы
-        tkod = datetime.fromtimestamp(tkto / 1000 + 7200).strftime('%d.%m %H:%M') if tkto else "N/A"
-        tkcd = datetime.fromtimestamp(tktc / 1000 + 7200).strftime('%d.%m %H:%M') if tktc else "N/A"
-        tod = datetime.fromtimestamp(tto / 1000 + 7200).strftime('%d.%m %H:%M') if tto else "N/A"
-        tcd = datetime.fromtimestamp(ttc / 1000 + 7200).strftime('%d.%m %H:%M') if ttc else "N/A"
+        # Добавляем +1 час к времени сервера для Москвы
+        tkod = datetime.fromtimestamp(tkto / 1000 + 3600).strftime('%d.%m %H:%M') if tkto else "N/A"
+        tkcd = datetime.fromtimestamp(tktc / 1000 + 3600).strftime('%d.%m %H:%M') if tktc else "N/A"
+        tod = datetime.fromtimestamp(tto / 1000 + 3600).strftime('%d.%m %H:%M') if tto else "N/A"
+        tcd = datetime.fromtimestamp(ttc / 1000 + 3600).strftime('%d.%m %H:%M') if ttc else "N/A"
 
         retest_label = f"#{retest_num}" if retest_num > 1 else ""
 
