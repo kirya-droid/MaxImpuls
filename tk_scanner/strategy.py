@@ -95,15 +95,18 @@ def calculate_tk_pro_signals(
     max_levels = 10  # Максимум активных уровней на символ
     max_retests = 1  # Максимум ретестов на уровень
 
-    # Проверка cooldown: сколько баров прошло с последнего ТК-бара
-    last_tk_bar = st.get('last_tk_bar', -100)
-    bars_since_last_tk = idx - last_tk_bar
-    cooldown_active = bars_since_last_tk < config.min_bars_between
+    # Проверка cooldown: сколько баров прошло с последнего ТК-бара (отдельно для LONG и SHORT)
+    last_long_tk_bar = st.get('last_long_tk_bar', -100)
+    last_short_tk_bar = st.get('last_short_tk_bar', -100)
+    bars_since_last_long = idx - last_long_tk_bar
+    bars_since_last_short = idx - last_short_tk_bar
+    long_cooldown_active = bars_since_last_long < config.min_bars_between
+    short_cooldown_active = bars_since_last_short < config.min_bars_between
 
     if long_tk:
-        # Проверка: не активен ли ещё cooldown после предыдущего ТК-бара
-        if cooldown_active:
-            logger.debug("🔍 %s | Пропуск LONG ТК-бара — cooldown (баров после последнего: %d)", symbol, bars_since_last_tk)
+        # Проверка: не активен ли ещё cooldown после предыдущего LONG ТК-бара
+        if long_cooldown_active:
+            logger.debug("🔍 %s | Пропуск LONG ТК-бара — cooldown (баров после последнего LONG: %d)", symbol, bars_since_last_long)
         # Добавляем новый уровень если есть место и нет cooldown
         elif len(tk_levels) < max_levels:
             tko, tkc = df['time'][idx], df['time'][idx] + interval_ms
@@ -126,15 +129,15 @@ def calculate_tk_pro_signals(
                     'open': df['open'][idx], 'time': candle_time, 'send_telegram': False
                 })
                 mark_sent('long_tk', df['time'][idx])
-                # Сохраняем индекс последнего ТК-бара
-                st['last_tk_bar'] = idx
+                # Сохраняем индекс последнего LONG ТК-бара
+                st['last_long_tk_bar'] = idx
         else:
             logger.debug("🔍 %s | Пропуск нового LONG ТК-бара — достигнут лимит уровней (%d)", symbol, len(tk_levels))
 
     if short_tk:
-        # Проверка: не активен ли ещё cooldown после предыдущего ТК-бара
-        if cooldown_active:
-            logger.debug("🔍 %s | Пропуск SHORT ТК-бара — cooldown (баров после последнего: %d)", symbol, bars_since_last_tk)
+        # Проверка: не активен ли ещё cooldown после предыдущего SHORT ТК-бара
+        if short_cooldown_active:
+            logger.debug("🔍 %s | Пропуск SHORT ТК-бара — cooldown (баров после последнего SHORT: %d)", symbol, bars_since_last_short)
         # Добавляем новый уровень если есть место и нет cooldown
         elif len(tk_levels) < max_levels:
             tko, tkc = df['time'][idx], df['time'][idx] + interval_ms
@@ -157,8 +160,8 @@ def calculate_tk_pro_signals(
                     'open': df['open'][idx], 'time': candle_time, 'send_telegram': False
                 })
                 mark_sent('short_tk', df['time'][idx])
-                # Сохраняем индекс последнего ТК-бара
-                st['last_tk_bar'] = idx
+                # Сохраняем индекс последнего SHORT ТК-бара
+                st['last_short_tk_bar'] = idx
         else:
             logger.debug("🔍 %s | Пропуск нового SHORT ТК-бара — достигнут лимит уровней (%d)", symbol, len(tk_levels))
 
