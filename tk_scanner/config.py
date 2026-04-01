@@ -60,6 +60,11 @@ class Config:
     base_body_multiplier: float = 1.6  # Множитель размера тела свечи для определения аномалий (1.3 = тело на 30% больше среднего)
     base_break_threshold: float = 0.3  # Порог пробоя — минимальная доля пробоя относительно диапазона свечи (0.3 = 30%)
     min_bars_between: int = 3  # Минимум баров между ТК-барами (cooldown после сигнала)
+    
+    # Blacklist символов (исключить из сканирования)
+    symbol_blacklist: List[str] = field(default_factory=lambda: [
+        'LYNUSDT', 'RIVERUSDT', 'POWERUSDT', 'APRUSDT', 'BTRUSDT', 'STABLEUSDT', 'BRUSDT'
+    ])
 
     # Окна расчётов
     body_window: int = 20  # Количество свечей для расчёта среднего размера тела свечи

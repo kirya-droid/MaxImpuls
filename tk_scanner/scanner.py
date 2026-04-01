@@ -39,11 +39,16 @@ async def scan_market_async(
     
     klines = await fetch_all_klines_async([], config)
     signals_count = tk_count = retest_count = 0
-    
+
     for symbol, candles in klines.items():
-        if not candles or len(candles) < config.lookback + 10:
+        # Проверка blacklist
+        if symbol in config.symbol_blacklist:
+            logger.debug("⚠️ %s | Пропуск (blacklist)", symbol)
             continue
         
+        if not candles or len(candles) < config.lookback + 10:
+            continue
+
         signals, state, sent_signals = calculate_tk_pro_signals(
             candles, symbol, state, sent_signals, config
         )
